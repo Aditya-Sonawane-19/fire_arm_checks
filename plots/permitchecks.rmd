@@ -86,7 +86,5 @@ ggplot(data = nics_firearm, aes(x = permit, y = month, colour = month)) +
          geom_line() + facet_wrap(~state)
 ```
 
-```{r}
 
-```
 

@@ -1,0 +1,92 @@
+---
+title: "vis"
+author: "kate whelan - 22386463"
+date: "2026-02-24"
+output: html_document
+---
+```{r}
+library(ggplot2)
+library(tidyverse)
+```
+
+
+
+```{r}
+library(tidyverse)
+library(lubridate)
+
+nics_firearm <- 
+  nics_firearm_background_checks %>%
+  mutate(month = ymd(paste0(month, "-01")))
+
+nics_firearm <- nics_firearm |> drop_na()
+view(nics_firearm)
+
+```
+
+```{r}
+permit_avg <- nics_firearm |>
+  group_by(state) |>
+  summarise(avg_monthly_permits = mean(permit))
+  
+
+ggplot(permit_avg,
+       aes(x =  reorder(state, avg_monthly_permits),
+           y = avg_monthly_permits)) +
+  geom_col(fill = "pink") +
+  coord_flip() +
+  labs(
+    title = "Average Monthly Permit Background Checks by State",
+    x = "State",
+    y = "Average Monthly Permit Checks"
+  ) 
+```
+
+```{r}
+permit_totals <- nics_firearm |>
+  group_by(state) |>
+  summarise(total_permits = sum(permit))
+
+ggplot(permit_totals, 
+       aes(x = reorder(state, total_permits), 
+           y = total_permits)) +
+  geom_col(fill = "pink") +
+  coord_flip() +
+  labs(
+    title = "Total Firearm Permit Background Checks by State",
+    x = "State",
+    y = "Total Permit Checks"
+  )
+```
+
+```{r}
+state_totals <- nics_firearm |>
+  group_by(state) |>
+  summarise(total_checks = sum(totals)) |>
+  arrange(desc(total_checks))
+
+ggplot(state_totals,
+       aes(x = reorder(state, total_checks),
+           y = total_checks)) +
+  geom_col(fill = "pink") +
+  coord_flip() +
+  labs(
+    title = "Total Firearm Background Checks by State",
+    x = "State",
+    y = "Total Checks"
+  )
+```
+
+```{r}
+ggplot(data = nics_firearm, aes(x = permit, y = month, colour = month)) +
+         geom_point() + facet_wrap(~state)
+```
+```{r}
+ggplot(data = nics_firearm, aes(x = permit, y = month, colour = month)) +
+         geom_line() + facet_wrap(~state)
+```
+
+```{r}
+
+```
+

@@ -1,4 +1,4 @@
-# Project Team Diary — Week 1
+# Project Team Diary — Week 1 (16/02 - 22/02)
 
 | **Section** | **Details** |
 |--------------|-------------|

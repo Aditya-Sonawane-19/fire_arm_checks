@@ -17,6 +17,8 @@
 # https://www2.census.gov/programs-surveys/popest/datasets/2020-2025/state/totals/
 #   NST-EST2025-POPCHG2020-2025
 
+### KNOWN LIMITATION THAT IT DOESN'T COVER ALL TERRITROIES FROM THE GIVEN DATASET
+
 library(tidyverse)
 raw_2020_2025 <- read_csv("data/other_sources/population/NST-EST2025-POPCHG2020-2025.csv")
 raw_2010_2020 <- read_csv("data/other_sources/population/nst-est2020.csv")
@@ -79,6 +81,8 @@ state_pop_2000_2023 <- clean_2000_2009 |>
     values_to = "population"
   ) |>
   mutate(year = as.integer(str_remove(year, "_pop")))
+
+state_pop_2000_2023 <- rename(state_pop_2000_2023, state = Region) # Oops, nice to have matching variable names
 
 # Can used the clean data later without all this hassle.
 saveRDS(state_pop_2000_2023, file = "data/other_sources/population/state_pop_2000_2023.RDS")

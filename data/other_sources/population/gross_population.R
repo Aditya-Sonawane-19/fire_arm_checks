@@ -24,7 +24,7 @@ nics_data <- read_csv("data/nics-firearm-background-checks.csv",
 # I then went to https://fred.stlouisfed.org/series/POPTOTUSA647NWDB (first relevant result via google search)
 # I inputted the range and downloaded the relevant data as a csv.
 
-annual_gross_pop <- read_csv("data/other_sources/POPTOTUSA647NWDB.csv") |>
+annual_gross_pop <- read_csv("data/other_sources/population/POPTOTUSA647NWDB.csv") |>
   rename(pop = POPTOTUSA647NWDB) |>
   mutate(year = year(observation_date)) |>
   select(-c(observation_date))

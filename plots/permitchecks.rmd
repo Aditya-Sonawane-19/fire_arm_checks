@@ -86,5 +86,54 @@ ggplot(data = nics_firearm, aes(x = permit, y = month, colour = month)) +
          geom_line() + facet_wrap(~state)
 ```
 
+```{r}
+install.packages(c("ggplot2", "dplyr", "maps"))
+library(ggplot2)
+library(dplyr)
+library(maps)
+```
+
+```{r}
+us_map <- map_data("state")
+nics_data <- nics_checks_last_five_years %>%
+  mutate(state = tolower(state))
+
+state_totals <- nics_data %>%
+  group_by(state) %>%
+  summarise(total_checks = sum(totals, na.rm = TRUE))
+
+map_data_joined <- us_map %>%
+  left_join(state_totals, by = c("region" = "state"))
+
+
+
+ggplot(map_data_joined, aes(x = long, y = lat, group = group, fill = total_checks)) +
+  geom_polygon(color = "white") +
+  scale_fill_gradient2(
+    low = "red",
+    high = "blue",
+    midpoint = mean(map_data_joined$total_checks, na.rm = TRUE)
+  ) +
+  labs(
+    title = "Total Firearm Background Checks by State",
+    fill = "total checks"
+  ) +
+  theme_dark()
+
+
+```
+```{r}
+library(sf)
+demo(nc, ask = FALSE, echo = FALSE)
+str(nc)
+
+st_geometry(nc)
+
+plot(st_geometry(nc))
+```
+
+
+
+
 
 

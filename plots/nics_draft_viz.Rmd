@@ -70,7 +70,7 @@ ggplot(df_top, aes(x = month, y = index, color = state)) +
 ```
 
 
-
+## heatmap 
 
 
 ```{r}
@@ -88,7 +88,11 @@ ggplot(heatmap_data, aes(x = year, y = reorder(state, total), fill = total)) +
 
 ```
 
-##
+## comparing dataframes 
+```{r}
+library(magrittr)
+```
+
 
 ```{r}
 df_compare <- df %>%

@@ -43,7 +43,7 @@ ggplot(permit_avg,
 ```
 
 ```{r}
-permit_totals <- nics_firearm |>
+permit_totals <- nics_checks_last_five_years |>
   group_by(state) |>
   summarise(total_permits = sum(permit))
 
@@ -87,50 +87,171 @@ ggplot(data = nics_firearm, aes(x = permit, y = month, colour = month)) +
 ```
 
 ```{r}
-install.packages(c("ggplot2", "dplyr", "maps"))
 library(ggplot2)
 library(dplyr)
 library(maps)
+library(plotly)
 ```
+
+
+#Total permits by state with scale from -1 to 1
+
 
 ```{r}
 us_map <- map_data("state")
-nics_data <- nics_checks_last_five_years %>%
-  mutate(state = tolower(state))
 
-state_totals <- nics_data %>%
-  group_by(state) %>%
-  summarise(total_checks = sum(totals, na.rm = TRUE))
+nics_checks_last_five_years <- nics_checks_last_five_years |>
+mutate(state = tolower(state))
 
-map_data_joined <- us_map %>%
-  left_join(state_totals, by = c("region" = "state"))
+state_permit_totals <- nics_checks_last_five_years |>
+group_by(state) |>
+summarise(total_permit = sum(permit))
 
+map_data_joined <- us_map |>
+left_join(state_permit_totals, by = c("region" = "state"))
 
+map_data <- map_data_joined |>
+mutate(scaled_values = 2 * (total_permit - min(total_permit)) / 
+(max(total_permit) - min(total_permit)) -1)
+  
 
-ggplot(map_data_joined, aes(x = long, y = lat, group = group, fill = total_checks)) +
+g1 <- ggplot(map_data, aes(x = long, y = lat, group = group, fill = scaled_values,
+  text = paste("State:",region,"<br>Permits:", total_permit))) +
   geom_polygon(color = "white") +
   scale_fill_gradient2(
-    low = "red",
-    high = "blue",
-    midpoint = mean(map_data_joined$total_checks, na.rm = TRUE)
+  low = "red",
+  high = "blue",
+  midpoint = (mean(map_data$scaled_values + 1))
   ) +
   labs(
-    title = "Total Firearm Background Checks by State",
-    fill = "total checks"
+  title = "Total Firearm Permits by State",
+  fill = "total permits"
   ) +
-  theme_dark()
+  theme_dark() 
+
+
+ggplotly(g1, tooltip = "text")
 
 
 ```
+
+
+
+#Total permit rechecks by state with scale from -1 to 1
+
 ```{r}
-library(sf)
-demo(nc, ask = FALSE, echo = FALSE)
-str(nc)
+us_map <- map_data("state")
 
-st_geometry(nc)
+nics_checks_last_five_years <- nics_checks_last_five_years |>
+mutate(state = tolower(state))
 
-plot(st_geometry(nc))
+state_permit_totals <- nics_checks_last_five_years |>
+group_by(state) |>
+summarise(total_permit = sum(permit_recheck))
+
+map_data_joined <- us_map |>
+left_join(state_permit_totals, by = c("region" = "state"))
+
+map_data <- map_data_joined |>
+mutate(scaled_values = 2 * (total_permit - min(total_permit)) / 
+(max(total_permit) - min(total_permit)) -1)
+
+
+
+g2 <- ggplot(map_data, aes(x = long, y = lat, group = group, fill = scaled_values,
+ text = paste("State:",region,"<br>Permit rechecks:", total_permit))) +
+ geom_polygon(color = "white") +
+ scale_fill_gradient2(
+ low = "red",
+ high = "blue",
+ midpoint = 0) +
+ labs(
+ title = "Total Firearm Background Checks by State",
+ fill = "total rechecks") +
+ theme_dark()
+
+
+ggplotly(g2, tooltip = "text")
 ```
+
+
+
+#Total permits by state with log and rank based scaling from -1 to 1
+#use or percent_rank() - 
+#use of log10
+```{r}
+us_map <- map_data("state")
+
+nics_checks_last_five_years <- nics_checks_last_five_years |>
+mutate(state = tolower(state))
+
+state_permit_totals <- nics_checks_last_five_years |>
+group_by(state) |>
+summarise(total_permit = sum(permit))
+
+map_data_joined <- us_map |>
+left_join(state_permit_totals, by = c("region" = "state"))
+
+map_data <- map_data_joined |>
+mutate(scaled_values = 2 * (percent_rank(log10(total_permit + 1)) - 0.5))
+
+g3 <- ggplot(map_data, aes(x = long, y = lat, group = group, fill = scaled_values,
+ text = paste("State:",region,"<br>Permits:", total_permit))) +
+ geom_polygon(color = "white") +
+ scale_fill_gradient2(
+ low = "red",
+ mid = "white",
+ high = "blue",
+ midpoint = 0) +
+ labs(
+ title = "Total Firearm Permits by State",
+ fill = "permits") +
+ theme_dark() 
+
+
+ggplotly(g3, tooltip = "text")
+
+```
+
+#Total permit rechecks by state with log and rank based scaling from -1 to 1
+#use or percent_rank()
+#use of log10
+#think this graph is best to show the divide between states?!?!
+```{r}
+us_map <- map_data("state")
+
+nics_checks_last_five_years <- nics_checks_last_five_years |>
+  mutate(state = tolower(state))
+
+state_permit_totals <- nics_checks_last_five_years |>
+  group_by(state) |>
+  summarise(total_permit = sum(permit_recheck))
+
+map_data_joined <- us_map |>
+  left_join(state_permit_totals, by = c("region" = "state"))
+
+map_data <- map_data_joined |>
+  mutate(
+    scaled_values = 2 * (percent_rank(log10(total_permit + 1)) - .5)
+  )
+
+g4 <- ggplot(map_data, aes(x = long, y = lat, group = group, fill = scaled_values,
+ text = paste("State:",region,"<br>Permit rechecks:", total_permit))) +
+ geom_polygon(color = "white") +
+ scale_fill_gradient2(
+ low = "red",
+ mid = "white",
+ high = "blue",
+ midpoint = 0) +
+ labs(
+ title = "Total Firearm Permits rechecks by State",
+ fill = "permit rechecks") +
+ theme_dark()
+
+ggplotly(g4, tooltip = "text")
+```
+
+#illinois is a clear outlier from all graphs seems like an error with data input.
 
 
 

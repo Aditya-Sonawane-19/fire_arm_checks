@@ -2,7 +2,9 @@
 title: "vis"
 author: "kate whelan - 22386463"
 date: "2026-02-24"
-output: html_document
+output:
+  pdf_document: default
+  html_document: default
 ---
 ```{r}
 library(ggplot2)

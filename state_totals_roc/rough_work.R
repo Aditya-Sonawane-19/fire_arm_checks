@@ -229,3 +229,4 @@ p <- big_nics_data |>
   facet_wrap(~ participation, ncol = 2)
 
 ggplotly(p, tooltip = "text") 
+

@@ -18,7 +18,6 @@ library(readr)
 df <- read_csv("~/fire_arm_checks/data/nics-firearm-background-checks.csv")
 
 
-# Convert month to date 
 df <- df %>%
   mutate(month = ymd(paste0(month, "-01")))
 
@@ -141,7 +140,7 @@ kmeans_result <- kmeans(scaled_features, centers = 3)
 
 
 ```{r}
-fviz_cluster(kmeans_result, data = scaled_features,
+# fviz_cluster(kmeans_result, data = scaled_features,
              main = "Clustering of States Based on Background Check Behaviour")
 ```
 

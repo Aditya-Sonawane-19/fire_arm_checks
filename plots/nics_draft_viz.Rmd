@@ -8,7 +8,7 @@ library(tidyverse)
 library(lubridate)
 library(scales)
 library(cluster)
-library(factoextra)
+#library(factoextra)
 ```
 
 
@@ -93,7 +93,9 @@ library(magrittr)
 ```
 
 
-```{r}
+```{r fig.height=8} 
+# 8/10/12 depending on how much space we have in the report/ppts 
+
 df_compare <- df %>%
   mutate(
     permit_total = permit + permit_recheck,
@@ -140,8 +142,10 @@ kmeans_result <- kmeans(scaled_features, centers = 3)
 
 
 ```{r}
-# fviz_cluster(kmeans_result, data = scaled_features,
-             main = "Clustering of States Based on Background Check Behaviour")
+#install.packages("factoextra")
+#library(factoextra)
+ #fviz_cluster(kmeans_result, data = scaled_features,
+          #   main = "Clustering of States Based on Background Check #Behaviour")
 ```
 
 

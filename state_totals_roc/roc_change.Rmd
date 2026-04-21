@@ -1,0 +1,174 @@
+---
+title: "roc_change"
+author: "Owen Frank O'Connor"
+date: "2026-04-07"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+```
+
+## Does the rate of change in total firearms background checks over time vary across states?
+
+---
+
+## 1. Libraries & Data Load
+
+```{r load-data}
+library(tidyverse)
+library(lubridate)
+library(scales)
+library(ggrepel)
+library(viridis)
+library(broom)
+
+nics <- read_csv("../data/nics-firearm-background-checks.csv") |>
+  mutate(date = ym(month), year = year(date))
+
+state_pop        <- readRDS("../data/other_sources/population/state_pop_2000_2023.RDS")
+nics_participation <- readRDS("../data/other_sources/nics_participation.RDS")
+```
+
+---
+
+## 2. Prepare Annual Per-Capita Totals
+
+```{r annual-pop}
+us_states <- c(state.name, "District of Columbia")
+
+annual_pop <- nics |>
+  filter(state %in% us_states, year >= 2000, year <= 2023) |>
+  group_by(state, year) |>
+  summarise(annual_total = sum(totals, na.rm = TRUE), .groups = "drop") |>
+  left_join(state_pop, by = c("state", "year")) |>
+  left_join(nics_participation, by = "state") |>
+  mutate(checks_per_100k = (annual_total / population) * 1e5) |>
+  filter(!is.na(checks_per_100k), checks_per_100k > 0)
+```
+
+## 4. Define Four ~6-Year Segments
+
+```{r define-segments}
+segment_levels <- c("2000–2005", "2006–2011", "2012–2017", "2018–2023")
+
+annual_pop <- annual_pop |>
+  mutate(
+    checks_per_1k = (annual_total / population) * 1000,
+    segment = case_when(
+      year %in% 2000:2005 ~ "2000–2005",
+      year %in% 2006:2011 ~ "2006–2011",
+      year %in% 2012:2017 ~ "2012–2017",
+      year %in% 2018:2023 ~ "2018–2023",
+      TRUE                ~ NA_character_
+    )
+  ) |>
+  filter(!is.na(segment), checks_per_1k > 0) |>
+  mutate(segment = factor(segment, levels = segment_levels))
+```
+
+---
+
+## 5. Fit Per-Segment Linear Trends by State
+
+For each state–segment pair we fit:
+
+$${\text{checks_per_1k}}_{t} \;=\; \beta_0 \;+\; {\beta_1}\cdot\text{year}_{t}$$
+
+The slope {\beta_1} estimates the annual rate of change in background checks
+per 1,000 residents within that ~6-year window.
+
+```{r segment-slopes}
+segment_slopes <- annual_pop |>
+  group_by(state, segment) |>
+  nest() |>
+  mutate(
+    fit    = map(data, \(d) lm(checks_per_1k ~ year, data = d)),
+    tidied = map(fit,  \(m) tidy(m, conf.int = TRUE))
+  ) |>
+  unnest(tidied) |>
+  filter(term == "year") |>
+  select(state, segment,
+         slope = estimate, se = std.error,
+         conf.low, conf.high, p.value) |>
+  ungroup()
+```
+
+---
+
+## 6. Formal Hypothesis Test: Do Slopes Vary Across Segments?
+
+**Hypotheses (per state)**
+
+- \(H_0\): the slope of \(\text{checks_per_1k} \sim \text{year}\) is equal
+  across all four segments  
+- \(H_1\): at least one segment has a significantly different slope
+
+We test this by comparing nested models via an F-test:
+
+- *Reduced*: `checks_per_1k ~ year + segment`  (common slope, shifted intercepts)  
+- *Full*: `checks_per_1k ~ year * segment`  (separate slope per segment)
+
+```{r interaction-ftest}
+ftest_results <- annual_pop |>
+  group_by(state) |>
+  nest() |>
+  mutate(
+    mod_full    = map(data, \(d) lm(checks_per_1k ~ year * segment, data = d)),
+    mod_reduced = map(data, \(d) lm(checks_per_1k ~ year + segment, data = d)),
+    anova_res   = map2(mod_reduced, mod_full, anova),
+    anova_tidy  = map(anova_res, tidy)
+  ) |>
+  unnest(anova_tidy) |>
+  filter(!is.na(p.value)) |>
+  select(state, df, statistic, p.value) |>
+  mutate(
+    significant = p.value < 0.05,
+    sig_label   = if_else(significant, "Significant (p < 0.05)", "Not Significant")
+  ) |>
+  ungroup()
+```
+
+```{r ftest-summary}
+n_sig <- sum(ftest_results$significant)
+n_tot <- nrow(ftest_results)
+
+cat(sprintf(
+  "%d of %d states show significantly different slopes across segments (α = 0.05).\n\n",
+  n_sig, n_tot
+))
+
+ftest_results |>
+  filter(significant) |>
+  arrange(p.value) |>
+  select(State = state, `F-statistic` = statistic, `p-value` = p.value) |>
+  mutate(across(where(is.numeric), \(x) round(x, 4))) |>
+  print(n = Inf)
+```
+
+---
+
+## 7. Visualisation
+
+### Slope Trajectories — Significantly Varying States
+
+Of the states where \(H_0\) is rejected, a  number of them have been idenitfied elsehwere for weird behaviour
+
+```{r slope-trajectory, fig.width = 15, fig.height = 4}
+bad_states <- c("Kentucky", "Illinois", "Utah", "Indiana", "North Carolina", "California", "North Dakota")
+good_sig_states <- ftest_results |>
+  filter(significant, !state %in% bad_states)
+
+segment_slopes |>
+  filter(state %in% good_sig_states$state) |>
+  ggplot(aes(x = segment, y = slope, group = state, colour = state)) +
+  geom_hline(yintercept = 0, linetype = "dashed", colour = "grey55", linewidth = 0.5) +
+  geom_errorbar(aes(ymin = conf.low, ymax = conf.high),
+                width = 0.18, alpha = 0.45, linewidth = 0.6) +
+  geom_line(linewidth = 0.8, alpha = 0.8) +
+  geom_point(size = 2.8) +
+  facet_wrap(~ state, scales = "free_y", ncol = 5) +
+  labs(x = "Segment", y = "Slope", title = "Slopes for Significant Good States") +
+  theme_minimal(base_size = 9) +
+  theme(legend.position = "bottom", strip.text = element_text(size = 8))
+```

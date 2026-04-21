@@ -199,9 +199,9 @@ g3 <- ggplot(map_data, aes(x = long, y = lat, group = group, fill = scaled_value
  text = paste("State:",region,"<br>Permits:", total_permit))) +
  geom_polygon(color = "white") +
  scale_fill_gradient2(
- low = "red",
+ low = "blue",
  mid = "white",
- high = "blue",
+ high = "red",
  midpoint = 0) +
  labs(
  title = "Total Firearm Permits by State",
@@ -251,8 +251,15 @@ g4 <- ggplot(map_data, aes(x = long, y = lat, group = group, fill = scaled_value
 ggplotly(g4, tooltip = "text")
 ```
 
-#illinois is a clear outlier from all graphs seems like an error with data input.
+#illinois and kentucky are clear outliers with their values being extremely high. 
+#States you would expect to have none have 0 such as texas and florida, and states that are expected to have high rechecks such as minnesota and california have high rechecks.
 
+#For the scaling :
+#1. We add 1 to total_permit to ensure ther are no issues when we log the      data. 
+#2. We use log10 which compresses big values and spreads small ones.(fixes issue with illinois)
+#3. Percent_rank() converts values into rank positions from 0 to 1.(makes it evenly spaced)
+#4. The -.5 is shifting the range so its from -.05 to 0.5 and it centers the data around 0.
+#5. Multiplying by 2 stretches the range to become [-1,1].
 
 
 

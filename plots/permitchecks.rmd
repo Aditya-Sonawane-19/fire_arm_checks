@@ -1,12 +1,10 @@
 ---
-title: "vis"
+  title: "vis"
 author: "kate whelan - 22386463"
 date: "2026-02-24"
-output:
-  pdf_document: default
-  html_document: default
+output: html_document
 ---
-```{r}
+  ```{r}
 library(ggplot2)
 library(tidyverse)
 ```
@@ -30,7 +28,7 @@ view(nics_firearm)
 permit_avg <- nics_firearm |>
   group_by(state) |>
   summarise(avg_monthly_permits = mean(permit))
-  
+
 
 ggplot(permit_avg,
        aes(x =  reorder(state, avg_monthly_permits),
@@ -81,11 +79,11 @@ ggplot(state_totals,
 
 ```{r}
 ggplot(data = nics_firearm, aes(x = permit, y = month, colour = month)) +
-         geom_point() + facet_wrap(~state)
+  geom_point() + facet_wrap(~state)
 ```
 ```{r}
 ggplot(data = nics_firearm, aes(x = permit, y = month, colour = month)) +
-         geom_line() + facet_wrap(~state)
+  geom_line() + facet_wrap(~state)
 ```
 
 ```{r}
@@ -103,31 +101,31 @@ library(plotly)
 us_map <- map_data("state")
 
 nics_checks_last_five_years <- nics_checks_last_five_years |>
-mutate(state = tolower(state))
+  mutate(state = tolower(state))
 
 state_permit_totals <- nics_checks_last_five_years |>
-group_by(state) |>
-summarise(total_permit = sum(permit))
+  group_by(state) |>
+  summarise(total_permit = sum(permit))
 
 map_data_joined <- us_map |>
-left_join(state_permit_totals, by = c("region" = "state"))
+  left_join(state_permit_totals, by = c("region" = "state"))
 
 map_data <- map_data_joined |>
-mutate(scaled_values = 2 * (total_permit - min(total_permit)) / 
-(max(total_permit) - min(total_permit)) -1)
-  
+  mutate(scaled_values = 2 * (total_permit - min(total_permit)) / 
+           (max(total_permit) - min(total_permit)) -1)
+
 
 g1 <- ggplot(map_data, aes(x = long, y = lat, group = group, fill = scaled_values,
-  text = paste("State:",region,"<br>Permits:", total_permit))) +
+                           text = paste("State:",region,"<br>Permits:", total_permit))) +
   geom_polygon(color = "white") +
   scale_fill_gradient2(
-  low = "red",
-  high = "blue",
-  midpoint = (mean(map_data$scaled_values + 1))
+    low = "red",
+    high = "blue",
+    midpoint = (mean(map_data$scaled_values + 1))
   ) +
   labs(
-  title = "Total Firearm Permits by State",
-  fill = "total permits"
+    title = "Total Firearm Permits by State",
+    fill = "total permits"
   ) +
   theme_dark() 
 
@@ -145,32 +143,32 @@ ggplotly(g1, tooltip = "text")
 us_map <- map_data("state")
 
 nics_checks_last_five_years <- nics_checks_last_five_years |>
-mutate(state = tolower(state))
+  mutate(state = tolower(state))
 
 state_permit_totals <- nics_checks_last_five_years |>
-group_by(state) |>
-summarise(total_permit = sum(permit_recheck))
+  group_by(state) |>
+  summarise(total_permit = sum(permit_recheck))
 
 map_data_joined <- us_map |>
-left_join(state_permit_totals, by = c("region" = "state"))
+  left_join(state_permit_totals, by = c("region" = "state"))
 
 map_data <- map_data_joined |>
-mutate(scaled_values = 2 * (total_permit - min(total_permit)) / 
-(max(total_permit) - min(total_permit)) -1)
+  mutate(scaled_values = 2 * (total_permit - min(total_permit)) / 
+           (max(total_permit) - min(total_permit)) -1)
 
 
 
 g2 <- ggplot(map_data, aes(x = long, y = lat, group = group, fill = scaled_values,
- text = paste("State:",region,"<br>Permit rechecks:", total_permit))) +
- geom_polygon(color = "white") +
- scale_fill_gradient2(
- low = "red",
- high = "blue",
- midpoint = 0) +
- labs(
- title = "Total Firearm Background Checks by State",
- fill = "total rechecks") +
- theme_dark()
+                           text = paste("State:",region,"<br>Permit rechecks:", total_permit))) +
+  geom_polygon(color = "white") +
+  scale_fill_gradient2(
+    low = "red",
+    high = "blue",
+    midpoint = 0) +
+  labs(
+    title = "Total Firearm Background Checks by State",
+    fill = "total rechecks") +
+  theme_dark()
 
 
 ggplotly(g2, tooltip = "text")
@@ -185,30 +183,30 @@ ggplotly(g2, tooltip = "text")
 us_map <- map_data("state")
 
 nics_checks_last_five_years <- nics_checks_last_five_years |>
-mutate(state = tolower(state))
+  mutate(state = tolower(state))
 
 state_permit_totals <- nics_checks_last_five_years |>
-group_by(state) |>
-summarise(total_permit = sum(permit))
+  group_by(state) |>
+  summarise(total_permit = sum(permit))
 
 map_data_joined <- us_map |>
-left_join(state_permit_totals, by = c("region" = "state"))
+  left_join(state_permit_totals, by = c("region" = "state"))
 
 map_data <- map_data_joined |>
-mutate(scaled_values = 2 * (percent_rank(log10(total_permit + 1)) - 0.5))
+  mutate(scaled_values = 2 * (percent_rank(log10(total_permit + 1)) - 0.5))
 
 g3 <- ggplot(map_data, aes(x = long, y = lat, group = group, fill = scaled_values,
- text = paste("State:",region,"<br>Permits:", total_permit))) +
- geom_polygon(color = "white") +
- scale_fill_gradient2(
- low = "blue",
- mid = "white",
- high = "red",
- midpoint = 0) +
- labs(
- title = "Total Firearm Permits by State",
- fill = "permits") +
- theme_dark() 
+                           text = paste("State:",region,"<br>Permits:", total_permit))) +
+  geom_polygon(color = "white") +
+  scale_fill_gradient2(
+    low = "blue",
+    mid = "white",
+    high = "red",
+    midpoint = 0) +
+  labs(
+    title = "Total Firearm Permits by State",
+    fill = "permits") +
+  theme_dark() 
 
 
 ggplotly(g3, tooltip = "text")
@@ -225,30 +223,30 @@ us_map <- map_data("state")
 nics_checks_last_five_years <- nics_checks_last_five_years |>
   mutate(state = tolower(state))
 
-state_permit_totals <- nics_checks_last_five_years |>
+state_rechecks_totals <- nics_checks_last_five_years |>
   group_by(state) |>
-  summarise(total_permit = sum(permit_recheck))
+  summarise(total_rechecks = sum(permit_recheck))
 
 map_data_joined <- us_map |>
-  left_join(state_permit_totals, by = c("region" = "state"))
+  left_join(state_rechecks_totals, by = c("region" = "state"))
 
 map_data <- map_data_joined |>
   mutate(
-    scaled_values = 2 * (percent_rank(log10(total_permit + 1)) - .5)
+    scaled_values = 2 * (percent_rank(log10(total_rechecks + 1)) - .5)
   )
 
 g4 <- ggplot(map_data, aes(x = long, y = lat, group = group, fill = scaled_values,
- text = paste("State:",region,"<br>Permit rechecks:", total_permit))) +
- geom_polygon(color = "white") +
- scale_fill_gradient2(
- low = "red",
- mid = "white",
- high = "blue",
- midpoint = 0) +
- labs(
- title = "Total Firearm Permits rechecks by State",
- fill = "permit rechecks") +
- theme_dark()
+                           text = paste("State:",region,"<br>Permit rechecks:", total_rechecks))) +
+  geom_polygon(color = "white") +
+  scale_fill_gradient2(
+    low = "red",
+    mid = "white",
+    high = "blue",
+    midpoint = 0) +
+  labs(
+    title = "Total Firearm Permits rechecks by State",
+    fill = "permit rechecks") +
+  theme_dark()
 
 ggplotly(g4, tooltip = "text")
 ```

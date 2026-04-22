@@ -1,0 +1,9 @@
+# Project Team Diary — Week 6 (30/03 – 5/04)
+
+| **Section** | **Details** |
+|--------------|-------------|
+| **Communication** | -	The group met up on the Wednesday 1/04. <br>-	We have been communicating through WhatsApp. <br>-	Commits have been pushed to GitHub.  
+| **Analysis / Difficulties and Resolutions** | -	A folder in the GitHub was created to allow group members to share report drafts. <br>- Kate had difficulties with dealing with the scaling of the spatial plots. First tried to use -1 to 1 range but extreme values had too much influence. A log transformation and the use of percent_rank() was the best option, reduced influence of the estranged values. <br>- Aditya experienced difficulties splitting checks by permits and sales. Reading the documentation available on the GitHub helped. <br>- Owen had realised his first attempt at adding population was at aggregate levels, and not broken down across states, so had to address this. <br>- State-by-state population was difficult to acquire for the full time period of the data and had to be joined across different sources.
+| **Progress Made** | - A different data source for population by state was added. <br>- Data was created relating to NICS participation (Point-of Contact (POC) vs. other). <br>- Spatial plots were created. <br>- Trend plots were created to compare top states in the US.<br>- There were visualisations created for checks over time.  
+| **Member Contributions** | - **Abigail** is responsible for the diary (Word and .md version). <br>- **Abigail**, **Owen** and **Kate** were present in the meeting Wednesday 1/04. <br>- **Owen** is responsible for the addition of the population by state data and the NICS participation data.  <br>- **Aditya** was responsible for the trend analysis and the visualisations created for checks over time.  
+

@@ -212,6 +212,71 @@ big_nics_data |>
   theme(legend.position = "none") +
   facet_wrap(~ participation, ncol = 2)
 
+highlight_states <- c("Kentucky", "Illinois", "Utah", "Indiana", "North Carolina")
+
+label_positions <- tibble::tribble(
+  ~state,            ~label_x,               ~label_y,
+  "Kentucky",        as.Date("2016-01-01"),   95,
+  "Illinois",        as.Date("2018-08-01"),   90,
+  "Utah",            as.Date("2010-04-01"),   60,
+  "Indiana",         as.Date("2017-04-01"),   45,
+  "North Carolina",  as.Date("2011-01-01"),   65
+)
+
+plot_data <- big_nics_data |>
+  left_join(state_pop_2000_2023, by = c("year", "state")) |>
+  left_join(nics_participation, by = "state") |>
+  filter(!is.na(participation),
+         !is.na(population),
+         !is.na(totals)) |>
+  arrange(state, month) |>
+  group_by(state) |>
+  mutate(
+    checks_per_thousand = totals / (population / 1000),
+    movement = checks_per_thousand - first(checks_per_thousand)
+  ) |>
+  ungroup() |>
+  mutate(highlight = state %in% highlight_states)
+
+# Join participation group onto label_positions so faceting works correctly
+label_data <- label_positions |>
+  left_join(
+    plot_data |> distinct(state, participation),
+    by = "state"
+  )
+
+highlight_colours <- c(
+  "Kentucky"       = "#E63946",
+  "Illinois"       = "#F4A261",
+  "Utah"           = "#2A9D8F",
+  "Indiana"        = "#457B9D",
+  "North Carolina" = "#8338EC"
+)
+
+ggplot() +
+  geom_line(
+    data = filter(plot_data, !highlight),
+    aes(x = month, y = movement, group = state, colour = participation),
+    alpha = 0.6, linewidth = 0.4
+  ) +
+  geom_line(
+    data = filter(plot_data, highlight),
+    aes(x = month, y = movement, group = state, colour = state),
+    alpha = 0.9, linewidth = 0.7
+  ) +
+  geom_text(
+    data = label_data,
+    aes(x = label_x, y = label_y, label = state, colour = state),
+    size = 2.5, hjust = 0
+  ) +
+  scale_colour_manual(
+    values = highlight_colours,
+    na.value = "grey60"   # fallback for participation-coloured non-highlight lines
+  ) +
+  theme_minimal() +
+  theme(legend.position = "none") +
+  facet_wrap(~ participation, ncol = 2)
+
 p <- big_nics_data |>
   left_join(state_pop_2000_2023, by = c("year", "state")) |>
   left_join(nics_participation, by = "state") |>
